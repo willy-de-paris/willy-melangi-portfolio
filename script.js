@@ -183,8 +183,14 @@ function filterProjects(category) {
     });
 }
 
-// Load projects from GitHub API
+// Load projects from GitHub API avec loading states
 async function loadGitHubProjects() {
+    const projectsGrid = document.getElementById('projectsGrid');
+    const projectsLoading = document.getElementById('projectsLoading');
+    
+    // Afficher les skeleton cards pendant le chargement
+    showSkeletonCards();
+    
     try {
         const username = 'willy-de-paris';
         const response = await fetch(`https://api.github.com/users/${username}/repos?sort=updated&per_page=100`);
@@ -215,32 +221,60 @@ async function loadGitHubProjects() {
             };
         });
         
+        // Simuler un délai pour montrer le loading
+        await new Promise(resolve => setTimeout(resolve, 800));
+        
         displayProjects(enhancedProjects);
         
     } catch (error) {
         console.error('Error loading GitHub projects:', error);
         // Fallback to local project data
+        await new Promise(resolve => setTimeout(resolve, 500));
         displayProjects(projects);
     } finally {
         projectsLoading.style.display = 'none';
     }
 }
 
+// Affiche des skeleton cards pendant le chargement
+function showSkeletonCards() {
+    const projectsGrid = document.getElementById('projectsGrid');
+    const skeletonCount = 3;
+    
+    for (let i = 0; i < skeletonCount; i++) {
+        const skeletonCard = document.createElement('div');
+        skeletonCard.className = 'skeleton-card';
+        skeletonCard.innerHTML = `
+            <div class="skeleton-image"></div>
+            <div class="skeleton-content">
+                <div class="skeleton-title"></div>
+                <div class="skeleton-text"></div>
+                <div class="skeleton-text"></div>
+                <div class="skeleton-text"></div>
+            </div>
+        `;
+        projectsGrid.appendChild(skeletonCard);
+    }
+}
+
 function displayProjects(projectsData) {
+    const projectsGrid = document.getElementById('projectsGrid');
+    
+    // Nettoyer les skeleton cards
     projectsGrid.innerHTML = '';
     
     projectsData.forEach((project, index) => {
         const projectCard = createProjectCard(project);
         projectCard.style.opacity = '0';
-        projectCard.style.transform = 'translateY(20px)';
-        projectCard.style.transition = 'all 0.5s ease';
+        projectCard.style.transform = 'translateY(20px) scale(0.95)';
+        projectCard.style.transition = 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)';
         
         projectsGrid.appendChild(projectCard);
         
-        // Animate cards appearing
+        // Animate cards appearing with staggered delay
         setTimeout(() => {
             projectCard.style.opacity = '1';
-            projectCard.style.transform = 'translateY(0)';
+            projectCard.style.transform = 'translateY(0) scale(1)';
         }, index * 100);
     });
 }
@@ -476,7 +510,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-// Typing effect for hero title
+// Typing effect avancé pour hero title
 function typeWriter() {
     const heroTitle = document.querySelector('.hero-title');
     const text = heroTitle.textContent;
@@ -487,15 +521,173 @@ function typeWriter() {
         if (i < text.length) {
             heroTitle.textContent += text.charAt(i);
             i++;
+            
+            // Ajoute un curseur clignotant
+            heroTitle.innerHTML += '<span class="cursor">|</span>';
+            setTimeout(() => {
+                heroTitle.querySelector('.cursor')?.remove();
+            }, 100);
+            
             setTimeout(type, 100);
+        } else {
+            // Ajoute le curseur à la fin
+            heroTitle.innerHTML += '<span class="cursor blink">|</span>';
         }
     }
     
     setTimeout(type, 500);
 }
 
+// Scroll reveal avancé
+function handleScrollReveal() {
+    const reveals = document.querySelectorAll('.scroll-reveal, .scroll-reveal-left, .scroll-reveal-right, .scroll-reveal-scale');
+    
+    reveals.forEach(element => {
+        const windowHeight = window.innerHeight;
+        const elementTop = element.getBoundingClientRect().top;
+        const elementVisible = 150;
+        
+        if (elementTop < windowHeight - elementVisible) {
+            element.classList.add('active');
+        }
+    });
+}
+
+// Ajoute les classes de scroll reveal aux éléments
+document.addEventListener('DOMContentLoaded', () => {
+    // Hero section
+    document.querySelector('.hero-profile')?.classList.add('scroll-reveal-scale');
+    document.querySelector('.hero-title')?.classList.add('scroll-reveal');
+    document.querySelector('.hero-subtitle')?.classList.add('scroll-reveal');
+    document.querySelector('.hero-description')?.classList.add('scroll-reveal');
+    document.querySelector('.hero-buttons')?.classList.add('scroll-reveal');
+    document.querySelector('.hero-social')?.classList.add('scroll-reveal');
+    
+    // About section
+    document.querySelector('.about-text')?.classList.add('scroll-reveal-left');
+    document.querySelector('.about-info')?.classList.add('scroll-reveal-right');
+    
+    // Skills
+    document.querySelectorAll('.skill-category').forEach((category, index) => {
+        category.classList.add('scroll-reveal-scale');
+        category.style.transitionDelay = `${index * 0.1}s`;
+    });
+    
+    // Projects
+    document.querySelectorAll('.project-card').forEach((card, index) => {
+        card.classList.add('scroll-reveal-scale');
+        card.style.transitionDelay = `${index * 0.1}s`;
+    });
+    
+    // Certifications
+    document.querySelectorAll('.certification-item').forEach((item, index) => {
+        item.classList.add('scroll-reveal-scale');
+        item.style.transitionDelay = `${index * 0.2}s`;
+    });
+    
+    // Timeline
+    document.querySelectorAll('.timeline-item').forEach((item, index) => {
+        item.classList.add('scroll-reveal');
+        item.style.transitionDelay = `${index * 0.2}s`;
+    });
+    
+    // Contact
+    document.querySelector('.contact-info')?.classList.add('scroll-reveal-left');
+    document.querySelector('.contact-form')?.classList.add('scroll-reveal-right');
+});
+
+// Performance optimizations
+function optimizePerformance() {
+    // Lazy loading for images
+    const images = document.querySelectorAll('img');
+    const imageObserver = new IntersectionObserver((entries, observer) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const img = entry.target;
+                img.classList.add('loaded');
+                observer.unobserve(img);
+            }
+        });
+    });
+    
+    images.forEach(img => imageObserver.observe(img));
+    
+    // Debounce scroll events
+    let scrollTimeout;
+    window.addEventListener('scroll', () => {
+        if (scrollTimeout) {
+            window.cancelAnimationFrame(scrollTimeout);
+        }
+        scrollTimeout = window.requestAnimationFrame(() => {
+            handleScrollReveal();
+            updateNavbar();
+        });
+    });
+    
+    // Optimize animations with requestAnimationFrame
+    function optimizedAnimate(element, properties, duration) {
+        const startTime = performance.now();
+        
+        function animate(currentTime) {
+            const elapsed = currentTime - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            
+            Object.keys(properties).forEach(prop => {
+                element.style[prop] = properties[prop].from + 
+                    (properties[prop].to - properties[prop].from) * progress + 'px';
+            });
+            
+            if (progress < 1) {
+                requestAnimationFrame(animate);
+            }
+        }
+        
+        requestAnimationFrame(animate);
+    }
+    
+    // Preload critical resources
+    preloadCriticalResources();
+}
+
+// Update navbar with throttling
+function updateNavbar() {
+    const navbar = document.querySelector('.navbar');
+    if (window.scrollY > 100) {
+        navbar.style.background = 'rgba(255, 255, 255, 0.98)';
+        navbar.style.boxShadow = '0 2px 20px rgba(0, 0, 0, 0.1)';
+    } else {
+        navbar.style.background = 'var(--bg-glass)';
+        navbar.style.boxShadow = 'none';
+    }
+}
+
+// Preload critical resources
+function preloadCriticalResources() {
+    // Preload font
+    const fontLink = document.createElement('link');
+    fontLink.rel = 'preload';
+    fontLink.as = 'font';
+    fontLink.type = 'font/woff2';
+    fontLink.crossOrigin = 'anonymous';
+    fontLink.href = 'https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfAZ9hiA.woff2';
+    document.head.appendChild(fontLink);
+    
+    // Preload profile image
+    const profileImg = document.querySelector('.profile-image');
+    if (profileImg && !profileImg.complete) {
+        const img = new Image();
+        img.onload = () => {
+            profileImg.src = img.src;
+        };
+        img.src = profileImg.dataset.src || profileImg.src;
+    }
+}
+
 // Initialize everything when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
+    // Initialize performance optimizations
+    optimizePerformance();
+    
     // Load projects
     loadGitHubProjects();
     
@@ -508,11 +700,17 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initial check for scroll reveal
     handleScrollReveal();
     
-    // Add smooth hover effects to project cards
+    // Enhanced hover effects for project cards
     document.addEventListener('mouseover', (e) => {
         if (e.target.closest('.project-card')) {
             const card = e.target.closest('.project-card');
             card.style.transform = 'translateY(-10px) scale(1.02)';
+            
+            // Add ripple effect
+            createRipple(e, card);
+            
+            // Add tilt effect
+            addTiltEffect(e, card);
         }
     });
     
@@ -520,9 +718,131 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.target.closest('.project-card')) {
             const card = e.target.closest('.project-card');
             card.style.transform = 'translateY(0) scale(1)';
+            removeTiltEffect(card);
         }
     });
+    
+    // Button click effects
+    document.querySelectorAll('.btn').forEach(button => {
+        button.addEventListener('click', function(e) {
+            createRipple(e, this);
+            
+            // Add success feedback
+            if (this.classList.contains('btn-primary')) {
+                this.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    this.style.transform = '';
+                }, 150);
+            }
+        });
+    });
+    
+    // Smooth scroll for navigation links
+    document.querySelectorAll('.nav-link').forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            const targetId = link.getAttribute('href');
+            const targetSection = document.querySelector(targetId);
+            
+            if (targetSection) {
+                const offsetTop = targetSection.offsetTop - 80;
+                window.scrollTo({
+                    top: offsetTop,
+                    behavior: 'smooth'
+                });
+            }
+        });
+    });
+    
+    // Parallax effect for hero section
+    window.addEventListener('scroll', () => {
+        const scrolled = window.pageYOffset;
+        const hero = document.querySelector('.hero');
+        const heroContent = document.querySelector('.hero-content');
+        
+        if (hero) {
+            hero.style.transform = `translateY(${scrolled * 0.5}px)`;
+        }
+        
+        if (heroContent) {
+            heroContent.style.transform = `translateY(${scrolled * 0.3}px) scale(${1 - scrolled * 0.0005})`;
+            heroContent.style.opacity = 1 - scrolled * 0.001;
+        }
+    });
+    
+    // Add hover sound effect (optional)
+    addHoverSounds();
 });
+
+// Tilt effect for cards
+function addTiltEffect(event, element) {
+    const rect = element.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+    const rotateX = (y - centerY) / 10;
+    const rotateY = (centerX - x) / 10;
+    
+    element.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.02)`;
+}
+
+function removeTiltEffect(element) {
+    element.style.transform = '';
+}
+
+// Add hover sounds (optional)
+function addHoverSounds() {
+    // Create audio context for subtle sounds
+    try {
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        
+        document.querySelectorAll('.btn, .social-link, .project-card').forEach(element => {
+            element.addEventListener('mouseenter', () => {
+                playHoverSound(audioContext);
+            });
+        });
+    } catch (e) {
+        // Audio not supported, continue without sounds
+    }
+}
+
+function playHoverSound(audioContext) {
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    oscillator.frequency.value = 800;
+    oscillator.type = 'sine';
+    
+    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+    
+    oscillator.start(audioContext.currentTime);
+    oscillator.stop(audioContext.currentTime + 0.1);
+}
+
+// Create ripple effect
+function createRipple(event, element) {
+    const ripple = document.createElement('span');
+    const rect = element.getBoundingClientRect();
+    const size = Math.max(rect.width, rect.height);
+    const x = event.clientX - rect.left - size / 2;
+    const y = event.clientY - rect.top - size / 2;
+    
+    ripple.style.width = ripple.style.height = size + 'px';
+    ripple.style.left = x + 'px';
+    ripple.style.top = y + 'px';
+    ripple.classList.add('ripple');
+    
+    element.appendChild(ripple);
+    
+    setTimeout(() => {
+        ripple.remove();
+    }, 600);
+}
 
 // Add parallax effect to hero section
 window.addEventListener('scroll', () => {
@@ -592,3 +912,109 @@ notificationStyles.textContent = `
     }
 `;
 document.head.appendChild(notificationStyles);
+
+// Add CSS for cursor, ripple effects and other visual improvements
+const visualImprovementsStyles = document.createElement('style');
+visualImprovementsStyles.textContent = `
+    /* Styles pour le curseur clignotant */
+    .cursor {
+        color: var(--primary-color);
+        font-weight: 300;
+        animation: none;
+    }
+
+    .cursor.blink {
+        animation: blink 1s infinite;
+    }
+
+    @keyframes blink {
+        0%, 50% { opacity: 1; }
+        51%, 100% { opacity: 0; }
+    }
+
+    /* Ripple effect */
+    .ripple {
+        position: absolute;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.6);
+        transform: scale(0);
+        animation: ripple-animation 0.6s ease-out;
+        pointer-events: none;
+    }
+
+    @keyframes ripple-animation {
+        to {
+            transform: scale(4);
+            opacity: 0;
+        }
+    }
+
+    /* Loading states */
+    .loading {
+        position: relative;
+        overflow: hidden;
+    }
+
+    .loading::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+        animation: loading-shimmer 1.5s infinite;
+    }
+
+    @keyframes loading-shimmer {
+        0% {
+            transform: translateX(-100%);
+        }
+        100% {
+            transform: translateX(100%);
+        }
+    }
+
+    /* Smooth transitions pour tous les éléments */
+    * {
+        transition: color 0.3s ease, background-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    /* Focus states améliorés */
+    button:focus,
+    input:focus,
+    textarea:focus {
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    /* Text selection */
+    ::selection {
+        background: var(--primary-color);
+        color: white;
+    }
+
+    ::-moz-selection {
+        background: var(--primary-color);
+        color: white;
+    }
+
+    /* Scrollbar personnalisée */
+    ::-webkit-scrollbar {
+        width: 10px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: var(--bg-secondary);
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: var(--gradient-primary);
+        border-radius: 5px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: var(--primary-color);
+    }
+`;
+document.head.appendChild(visualImprovementsStyles);
